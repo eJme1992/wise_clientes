@@ -14,9 +14,8 @@ class CreateWebsTable extends Migration
     public function up()
     {
         Schema::create('webs', function (Blueprint $table) {
-            $table->increments('id');
-            $table->integer('cliente_id');           
-            $table->integer('hosting_id');
+            $table->increments('id');           
+            $table->integer('host_id');
             $table->integer('db_id');
             $table->string('tipo');
             $table->string('url');
@@ -25,8 +24,8 @@ class CreateWebsTable extends Migration
             $table->string('pass');
             $table->timestamps();
 
-            $table->foreign('cliente_id')->references('id')->on('clientes');
-            $table->foreign('hosting_id')->references('id')->on('hostings');
+        
+            $table->foreign('host_id')->references('id')->on('hosts');
             $table->foreign('db_id')->references('id')->on('dbs');
         });
     }

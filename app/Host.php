@@ -20,4 +20,7 @@ class Host extends Model
     public function clientes(){
     	return  $this->belongsTo(Cliente::class);
     }
+    public function webs(){
+        return  $this->hasMany(web::class);
+    }
 }

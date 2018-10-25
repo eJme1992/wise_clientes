@@ -3,6 +3,7 @@
 @section('title', 'Nuevo cliente') 
 
 @section('content')
+
 <div class="container-fluid cm-container-white">
     <h2 style="margin-top:0; margin-bottom:35px">Clientes</h2>
     <table id="grid" class="table table-striped table-bordered" cellspacing="0" width="100%">

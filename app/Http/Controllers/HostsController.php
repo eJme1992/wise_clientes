@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Cliente;
+use App\Host;
 
-class HostsController extends Controller
+class hostsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -21,10 +23,9 @@ class HostsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
-        //
-    }
+    public function create($id){
+  return view('layouts.hosts.hosts_create',compact('id'));
+  }
 
     /**
      * Store a newly created resource in storage.
@@ -34,7 +35,27 @@ class HostsController extends Controller
      */
     public function store(Request $request)
     {
-        //
+    if ($request->ajax()) {
+       
+       /*$validatedData = $request->validate(['host' => 'required', 'user' => 'required', 'pass' => 'required']);*/
+       
+       
+       $cliente = Cliente::where('slug',$request->input('id_cliente'))->first();       
+
+
+       $cliente->hosts()->create([
+       
+           'hosting'         => $request->input('hosting'),
+           'plan'            => $request->input('plan'),
+           'url_cpanel'      => $request->input('url_cpanel'),
+           'user'            => $request->input('user'),
+           'pass'            => $request->input('pass'),
+           'cuenta'          => $request->input('cuenta'),
+           'pin'             => $request->input('pin')
+           
+        ]);
+      return response()->json(['mensaje' => 'Registro creado con exito', 'status' => 'ok'], 200);
+    }
     }
 
     /**
@@ -54,9 +75,10 @@ class HostsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        //
+    public function edit($slug,$id){
+      $cliente = Cliente::where('slug',$slug)->first();
+      $host    = host::where('id',$id)->first();
+     return view('layouts.hosts.hosts_edit', compact('host','cliente'));
     }
 
     /**
@@ -66,10 +88,17 @@ class HostsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+       public function update(Request $request, host $host)
     {
-        //
-    }
+      if ($request->ajax()) {    
+        
+         $host->fill($request->except('id_cliente'));
+         $id = $request->input('id_cliente');
+         $host->save();
+         return redirect('hosts/edit'.$id.''.$host->id);
+     }
+
+        }
 
     /**
      * Remove the specified resource from storage.
@@ -77,8 +106,10 @@ class HostsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($id,$slug)
     {
-        //
+         $host = host::where('id',$id)->first();
+         $host->delete();
+        return redirect('clientes/'.$slug);
     }
 }

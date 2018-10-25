@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Cliente;
+use App\Social;
 
 class SocialesController extends Controller
 {
@@ -21,10 +23,9 @@ class SocialesController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
-        //
-    }
+    public function create($id){
+  return view('layouts.Sociales.Sociales_create',compact('id'));
+  }
 
     /**
      * Store a newly created resource in storage.
@@ -34,7 +35,21 @@ class SocialesController extends Controller
      */
     public function store(Request $request)
     {
-        //
+    if ($request->ajax()) {
+       
+       $validatedData = $request->validate(['nombre' => 'required', 'user' => 'required', 'pass' => 'required']);
+       
+       
+       $cliente = Cliente::where('slug',$request->input('id_cliente'))->first();       
+
+       $cliente->sociales()->create([
+           'nombre'     => $request->input('nombre'),
+           'user'     => $request->input('user'),
+           'pass'     => $request->input('pass')
+           
+        ]);
+      return response()->json(['mensaje' => 'Registro creado con exito', 'status' => 'ok'], 200);
+    }
     }
 
     /**
@@ -54,9 +69,10 @@ class SocialesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        //
+    public function edit($slug,$id){
+      $cliente = Cliente::where('slug',$slug)->first();
+      $sociales    = Social::where('id',$id)->first();
+     return view('layouts.Sociales.Sociales_edit', compact('sociales','cliente'));
     }
 
     /**
@@ -66,10 +82,17 @@ class SocialesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+       public function update(Request $request, mail $mail)
     {
-        //
-    }
+      if ($request->ajax()) {    
+        
+         $sociales->fill($request->except('id_cliente'));
+         $id = $request->input('id_cliente');
+         $sociales->save();
+         return response()->json(['mensaje' => 'Este usuario es principal debe escoger a otro usuario como principal para que este sea secundario', 'status' => 'ok'], 200);
+         }
+
+        }
 
     /**
      * Remove the specified resource from storage.
@@ -77,8 +100,10 @@ class SocialesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($id,$slug)
     {
-        //
+         $sociales = Social::where('id',$id)->first();
+         $sociales->delete();
+         return redirect('clientes/'.$slug);
     }
 }

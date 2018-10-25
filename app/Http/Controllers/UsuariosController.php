@@ -3,70 +3,73 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Cliente;
+use App\Usuario;
 
 class UsuariosController extends Controller
 {
-   public function create(){
-    return view('layouts.usuarios.usuarios_create', compact('usuarios'));
+ public function create($id){
+  return view('layouts.usuarios.usuarios_create',compact('id'));
   }
 
   public function store(Request $request){
     if ($request->ajax()) {
-      $validatedData = $request->validate(['nombrec' => 'required', 'logo' => 'required|image', 'tipo' => 'required', 'correoc' => 'required', 'telefonoc' => 'required', ]);
-     
-      $usuario = new usuario();
-      if ($request->file('logo')) {
-        $file = $request->file('logo');
-        $name = time() . $file->getClientOriginalName();
-        $name = str_replace(' ', '', $name);
-        $name = $usuario->limpiarCaracteresEspeciales($name);
-        $file->move(public_path() . '/img/programa/', $name);
-      }
+       
+       $validatedData = $request->validate(['nombre' => 'required', 'apellido' => 'required', 'tipo' => 'required', 'correo' => 'required', 'telefono' => 'required', ]);
+       
+       
+       $cliente = Cliente::where('slug',$request->input('id_cliente'))->first();
+       $id =  $cliente->id;
 
-      $usuario->nombre = $request->input('nombrec');
-      $usuario->tipo = $request->input('tipo');
-      $usuario->descripcion = $request->input('tipo');
-      $usuario->logo = $name;
-      $usuario->correo = $request->input('correoc');
-      $usuario->telefono = $request->input('telefonoc');
-      $usuario->slug = uniqid($request->input('nombrec'));
-      $usuario->save();
-      if ($request->input('p') == 1) {
-        $correo = $request->input('correoc');
-        $telefono = $request->input('telefonoc');
-      }
-      else {
-        $correo = $request->input('correo');
-        $telefono = $request->input('telefono');
-      }
+       if($request->input('tipo') == 'principal'){ 
+       $user = Usuario::where('tipo','principal')->where('cliente_id',$id)->first();
+       if($user!=null){
+       $user->tipo = 'secundario';
+       $user->save();}
+       }
+       $Cliente = Cliente::where('id',$id)->first();
+       
 
-      $usuario->usuarios()->create(['nombre' => $request->input('nombre') , 'apellido' => $request->input('apellido') , 'cargo' => $request->input('cargo') , 'tipo' => 'principal', 'correo' => $correo, 'telefono' => $telefono]);
+
+       $Cliente->usuarios()->create([
+           'nombre'     => $request->input('nombre'),
+           'apellido'   => $request->input('apellido'),
+           'cargo'      => $request->input('cargo'),
+           'tipo'       => $request->input('tipo'),
+           'correo'     => $request->input('correo'),
+           'telefono'   => $request->input('telefono'),
+        ]);
       return response()->json(['mensaje' => 'Registro creado con exito', 'status' => 'ok'], 200);
     }
   }
 
-    public function edit(Usuario $usuario){
-      return view('layouts.usuarios.usuarios_edit', compact('usuario'));
+    public function edit($slug,$id){
+      $cliente = Cliente::where('slug',$slug)->first();
+      $usuario = Usuario::where('id',$id)->first();
+     return view('layouts.usuarios.usuarios_edit', compact('usuario','cliente'));
     }
 
     public function update(Request $request, usuario $usuario)
     {
-      if ($request->ajax()) {
-        $usuario->fill($request->except('logo'));
-        /* $user = Usuario::findOrFail($usuario->id)->where('tipo','principal')->first();
-        $user->tipo = 'standar';
-        $user->save();*/
-        if ($request->file('logo')) {
-          $file = $request->file('logo');
-          $name = time() . $file->getClientOriginalName();
-          $name = str_replace(' ', '', $name);
-          $name = $usuario->limpiarCaracteresEspeciales($name);
+      if ($request->ajax()) {    
+        $usuario->fill($request->except('id_cliente'));
+        $id = $request->input('id_cliente');
 
-          // $name = str_replace(' ', '', $usuario->logo);
+        if($request->input('tipo') == 'principal'){
+        $user = Usuario::where('tipo','principal')->where('cliente_id',$id)->first();
+        if($user!=null){
+        $user->tipo = 'secundario';
+        $user->save();}
+        }else{
+         $var= Usuario::where('tipo','principal')->where('id',$usuario->id)->first();
+         if($var!=null){ 
+         return response()->json(['error' => 'Este usuario es principal debe escoger a otro usuario como principal para que este sea secundario', 'status' => '0'], 200);
+         }
 
-          $usuario->logo = $name;
-          $file->move(public_path() . '/img/programa/', $name);
         }
+
+
+
 
         $usuario->save();
 
@@ -76,11 +79,20 @@ class UsuariosController extends Controller
       }
     }
 
-    public function destroy(usuario $usuario)
+    public function destroy($id,$slug)
     {
-      $file_path = public_path() . '/img/programa/' . $usuario->logo;
-      File::delete($file_path);
-      $usuario->delete();
-      return redirect('usuarios');
+      $cliente = Cliente::where('slug',$slug)->first();  
+      $usuario = Usuario::where('id',$id)->first();
+      if($usuario->tipo == 'principal'){
+        $user = Usuario::where('tipo','secundario')->where('cliente_id',$cliente->id)->first();
+        if(count($user)){
+        $user->tipo = 'principal';
+        $user->save();
+        }else{
+        return redirect('clientes/'.$slug);
+        }
+        }
+        $usuario->delete();
+        return redirect('clientes/'.$slug);
     }
 }

@@ -1,9 +1,12 @@
 <?php
 
+
 namespace App\Http\Controllers;
 
 use App\Cliente;
 use App\Usuario;
+use App\Web;
+use App\host;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -113,7 +116,14 @@ class ClientesController extends Controller
        $user = Usuario::where('tipo','principal')->where('cliente_id',$Cliente->id)->first();
        $cliente = Cliente::findOrFail($Cliente->id);
        $usuarios = $cliente->usuarios;
-       return view('layouts.clientes.clientes_view',compact('Cliente','user','usuarios'));  
+       $hosts = $cliente->hosts;
+       $mails = $cliente->mails;
+       $dbs = $cliente->dbs;
+       $sociales = $cliente->sociales;
+
+       $webs = Web::join('hosts', 'hosts.id', '=', 'webs.host_id')->join('clientes', 'clientes.id', '=', 'hosts.cliente_id')->where('cliente_id',$Cliente->id)->get();
+
+       return view('layouts.clientes.clientes_view',compact('Cliente','user','usuarios','hosts','mails','dbs','sociales','webs'));  
     }
 
     /**

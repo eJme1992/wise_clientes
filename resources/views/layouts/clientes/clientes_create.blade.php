@@ -56,7 +56,7 @@
       <div class="formularios ocultar" id="nuevo_usuario">
          <div class="col-sm-12">
             <h4 style="display:inline;">Persona de contacto</h4>
-            <button class="btn-xs btn" type="button" onclick="mostrar()"> <i class="fas fa-chevron-left"></i> Atrás</button>
+            <button class="btn-xs btn btn-primary" type="button" onclick="mostrar()"> <i class="fas fa-chevron-left"></i> Atrás</button>
          </div>
          <div class="col-sm-6">
             <label>Nombre:</label>
